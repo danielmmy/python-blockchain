@@ -1,6 +1,6 @@
 from block import Block
-from hash_util import compute_hash
 from transaction import Transaction
+from blockchain_util import BlockchainUtil
 import pickle
 
 DIFFICULTY = 2
@@ -60,10 +60,10 @@ class Blockchain:
 
     def verify_chain(self):
         for i in range(1, len(self.chain)):
-            if self.chain[i].last_hash != compute_hash(self.chain[i-1]):
+            if self.chain[i].last_hash != BlockchainUtil.compute_hash(self.chain[i-1]):
                 return False
             zeroes = '0' * DIFFICULTY
-            if compute_hash(self.chain[i])[:DIFFICULTY] != zeroes:
+            if BlockchainUtil.compute_hash(self.chain[i])[:DIFFICULTY] != zeroes:
                 return False
         return True
 
@@ -92,7 +92,7 @@ class Blockchain:
 
 
     def proof_of_work(self, block):
-        hash = compute_hash(block)
+        hash = BlockchainUtil.compute_hash(block)
         zeroes = '0' * DIFFICULTY
         return hash[:DIFFICULTY] == zeroes
 
@@ -101,7 +101,7 @@ class Blockchain:
         open_transactions_dup = self.open_transactions[:]
         mine_transaction = Transaction(MINE_REWARD, owner, 'MINING')
         open_transactions_dup.append(mine_transaction)
-        last_hash = compute_hash(self.get_last_chain())
+        last_hash = BlockchainUtil.compute_hash(self.get_last_chain())
         block = Block(
             last_hash,
             self.get_length(),

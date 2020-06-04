@@ -1,10 +1,6 @@
-import hashlib
-import collections
-import pickle
 from block import Block
 from blockchain import Blockchain
 from transaction import Transaction
-from hash_util import compute_hash
 from uuid import uuid4
 
 class Node:
