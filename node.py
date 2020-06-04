@@ -33,6 +33,9 @@ class Node:
             print('q - exit')
             print('m - mine')
             option = input(': ')
+            if (not self.wallet.getPublicKey()) and option != '3' and option != '4' and option != 'q':
+                print('Error: needs a wallet first.')
+                continue
             if option == '1':
                 receiver = input('Sending from ' + self.wallet.getPublicKey() + ' To: ')
                 amount = float(input('Amount: '))
