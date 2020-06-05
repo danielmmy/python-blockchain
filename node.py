@@ -15,13 +15,20 @@ class Node:
 
 
 
-    def get_transaction(self, receiver, amount):
+    def get_transaction(self):
+        receiver = input('Sending from ' + self.wallet.getPublicKey() + ' To: ')
+        amount = float(input('Amount: '))
         balance = self.blockchain.get_balance(self.wallet.getPublicKey())
         if amount >= balance:
             print('Error not enought funds to complete transaction')
             return
-        open_transaction = Transaction(amount, receiver, self.wallet.getPublicKey())
-        self.blockchain.add_transaction(open_transaction)
+        signature = self.wallet.sign_transaction(amount, receiver)
+        open_transaction = Transaction(amount, receiver, self.wallet.getPublicKey(), signature)
+        try:
+            open_transaction.verify()
+            self.blockchain.add_transaction(open_transaction)
+        except AssertionError as err:
+            print(err)
 
     def start_node(self):
         while True:
@@ -37,9 +44,7 @@ class Node:
                 print('Error: needs a wallet first.')
                 continue
             if option == '1':
-                receiver = input('Sending from ' + self.wallet.getPublicKey() + ' To: ')
-                amount = float(input('Amount: '))
-                self.get_transaction(receiver, amount)
+                self.get_transaction()
             elif option == '2':
                 print(self.blockchain)
             elif option == '3':

@@ -1,5 +1,7 @@
 from Crypto.PublicKey import RSA
+from Crypto.Signature import PKCS1_v1_5
 import Crypto.Random
+from Crypto.Hash import SHA256
 import binascii
 
 class Wallet:
@@ -16,7 +18,7 @@ class Wallet:
 
     def getPublicKey(self):
         if self.publicKey:
-            return str(self.publicKey.export_key())
+            return binascii.hexlify(self.publicKey.export_key()).decode()
         else:
             return None
 
@@ -43,3 +45,14 @@ class Wallet:
             self.privateKey = RSA.import_key(open("private.pem").read())
         except (IOError, EOFError):
             print('No wallet found')
+
+
+    def sign_transaction(self, amount, receiver):
+        signer = PKCS1_v1_5.new(self.privateKey)
+        tx_str = '{}{}{}'.format(str(amount), str(receiver), self.getPublicKey())
+        hash = SHA256.new(tx_str.encode())
+        signature = signer.sign(hash)
+        return binascii.hexlify(signature).decode('ascii')
+        
+
+

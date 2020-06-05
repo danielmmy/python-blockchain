@@ -98,18 +98,24 @@ class Blockchain:
 
 
     def mine(self, owner):
-        open_transactions_dup = self.open_transactions[:]
-        mine_transaction = Transaction(MINE_REWARD, owner, 'MINING')
-        open_transactions_dup.append(mine_transaction)
-        last_hash = BlockchainUtil.compute_hash(self.get_last_chain())
-        block = Block(
-            last_hash,
-            self.get_length(),
-            open_transactions_dup
-        )
-        while not self.proof_of_work(block):
-            block.nonce += 1
+        try:
+            for tx in self.open_transactions:
+                tx.verify()
+            open_transactions_dup = self.open_transactions[:]
+            mine_transaction = Transaction(MINE_REWARD, owner, 'MINING')
+            open_transactions_dup.append(mine_transaction)
+            last_hash = BlockchainUtil.compute_hash(self.get_last_chain())
+            block = Block(
+                last_hash,
+                self.get_length(),
+                open_transactions_dup
+            )
+            while not self.proof_of_work(block):
+                block.nonce += 1
 
-        self.chain.append(block)
-        self.open_transactions = []
-        self.save_data()
+            self.chain.append(block)
+            self.open_transactions = []
+            self.save_data()
+        except AssertionError as err:
+            print(err)
+            
