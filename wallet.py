@@ -15,6 +15,10 @@ class Wallet:
         self.publicKey = publicKey
         self.privateKey = privateKey
 
+        if privateKey and publicKey:
+            return True
+        return False
+
 
     def getPublicKey(self):
         if self.publicKey:
@@ -23,17 +27,30 @@ class Wallet:
             return None
 
 
-    def genKeys(self):
-        key = RSA.generate(1024)
-        private_key = key
-        file_out = open("private.pem", "wb")
-        file_out.write(private_key.export_key())
-        file_out.close()
+    def getPrivateKey(self):
+        if self.privateKey:
+            return binascii.hexlify(self.privateKey.export_key()).decode()
+        else:
+            return None
 
-        public_key = key.publickey()
-        file_out = open("public.pem", "wb")
-        file_out.write(public_key.export_key())
-        file_out.close()
+
+    def genKeys(self):
+        private_key = None
+        public_key = None
+        try:
+            key = RSA.generate(1024)
+            private_key = key
+            file_out = open("private.pem", "wb")
+            file_out.write(private_key.export_key())
+            file_out.close()
+
+            public_key = key.publickey()
+            file_out = open("public.pem", "wb")
+            file_out.write(public_key.export_key())
+            file_out.close()
+        except:
+            pass
+
 
         return private_key, public_key
         # return (binascii.hexlify(publicKey).decode('ascii'), binascii.hexlify(privateKey).decode('ascii'))
@@ -43,8 +60,10 @@ class Wallet:
         try:
             self.publicKey = RSA.import_key(open("public.pem").read())
             self.privateKey = RSA.import_key(open("private.pem").read())
+            return True
         except (IOError, EOFError):
             print('No wallet found')
+            return False
 
 
     def sign_transaction(self, amount, receiver):

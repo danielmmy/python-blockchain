@@ -99,6 +99,8 @@ class Blockchain:
 
     def mine(self, owner):
         try:
+            if not owner:
+                raise NameError('Not a  valid wallet')
             for tx in self.open_transactions:
                 tx.verify()
             open_transactions_dup = self.open_transactions[:]
@@ -116,6 +118,8 @@ class Blockchain:
             self.chain.append(block)
             self.open_transactions = []
             self.save_data()
-        except AssertionError as err:
+            return block
+        except (AssertionError, NameError) as err:
             print(err)
+            return None
             
