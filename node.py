@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 import os
-from flask import Flask, jsonify, redirect, url_for, request
+from flask import Flask, jsonify, redirect, url_for, request, send_from_directory
 from flask_cors import CORS
 from wallet import Wallet
 from blockchain import Blockchain
@@ -14,7 +14,7 @@ blockchain = Blockchain()
 
 @app.route('/', methods=['GET'])
 def get_ui():
-    return 'This works', 200
+    return send_from_directory('ui', 'index.html'), 200
 
 
 @app.route('/chain', methods=['GET'])
@@ -31,7 +31,12 @@ def mine_block():
     if block:
         block_dict = block.__dict__.copy()
         block_dict['transactions'] = [tx.__dict__ for tx in block_dict['transactions']]
-        return block_dict, 201
+        response = {
+            'message': 'Mining was successfull',
+            'block': block_dict,
+            'balance': blockchain.get_balance(wallet.getPublicKey())
+        }
+        return response, 201
     else:
         err = {
             'message': 'Error mining block',
@@ -50,7 +55,8 @@ def create_wallet():
     response = {
         'message': 'Wallet successfully created',
         'private_key': wallet.getPrivateKey(),
-        'public_key': wallet.getPublicKey()
+        'public_key': wallet.getPublicKey(),
+        'balance': blockchain.get_balance(wallet.getPublicKey())
     }
     return response, 201
 
@@ -73,7 +79,8 @@ def get_balance():
         }
         return response, 400
     response = {
-        'wallet': wallet.getPublicKey(),
+        'public_key': wallet.getPublicKey(),
+        'private_key': wallet.getPrivateKey(),
         'balance': blockchain.get_balance(wallet.getPublicKey())
     }
     return response, 200
@@ -121,16 +128,17 @@ def create_transaction():
         blockchain.add_transaction(open_transaction)
     except AssertionError as err:
         return err, 500
-    return open_transaction.__dict__, 201
+
+    response = {
+        'message': 'Transaction successfully added.',
+        'transaction': open_transaction.__dict__,
+        'balance': blockchain.get_balance(wallet.getPublicKey())
+    }
+    return response, 201
 
 
 @app.route('/transactions', methods=['GET'])
 def list_transactions():
-    if not wallet.getPublicKey():
-        response = {
-            'message': 'Not a valid wallet'
-        }
-        return response, 400
     tx_dict = [tx.__dict__ for tx in blockchain.open_transactions]
     response = {
         'message': 'Found {} open transactions'.format(len(tx_dict)),
