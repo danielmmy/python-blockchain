@@ -5,11 +5,11 @@ import pickle
 
 DIFFICULTY = 2
 MINE_REWARD = 10
-SAVE_FILE_PATH = 'data/blockchain.data'
 
 
 class Blockchain:
-    def __init__(self):
+    def __init__(self, save_file_path):
+        self.save_file_path = save_file_path
         genesis_block = Block('1', 0, [])
         self.chain = [genesis_block]
         self.open_transactions = []
@@ -26,7 +26,7 @@ class Blockchain:
 
     def load_data(self):
         try:
-            with open(SAVE_FILE_PATH, 'rb') as f:
+            with open(self.save_file_path, 'rb') as f:
                 blockchain = pickle.loads(f.read())
                 self.chain = blockchain.chain
                 self.open_transactions = blockchain.open_transactions
@@ -35,7 +35,7 @@ class Blockchain:
 
     def save_data(self):
         try:
-            with open(SAVE_FILE_PATH, 'wb') as f:
+            with open(self.save_file_path, 'wb') as f:
                 f.write(pickle.dumps(self))
         except IOError:
             print('Error saving the blockchain')
@@ -56,6 +56,25 @@ class Blockchain:
 
     def get_last_chain(self):
         return self.chain[-1]
+
+
+    def get_last_chain_dict(self):
+        chain = self.get_chain_dict(len(self.chain -1))
+        return chain[-1]
+
+
+    def get_chain_dict(self, begin=0, end=-1):
+        chain_copy = self.chain[begin:end]
+        for chain in  chain_copy:
+            tx_dict = []
+            for tx in chain.transactions:
+                tx_dict.append(tx.__dict__.copy())
+            chain_copy.transactions = tx_dict
+
+        chain_dict = []
+        for chain in chain_copy:
+            chain_dict.append(chain.__dict__.copy())
+        return chain_dict
 
 
     def verify_chain(self):
@@ -122,4 +141,16 @@ class Blockchain:
         except (AssertionError, NameError) as err:
             print(err)
             return None
+
+
+    def add_block(self, block):
+        for tx in block.transactions:
+            if not tx.verify():
+                return False
+        self.chain.append(block)
+        if (not self.verify_chain()):
+            self.chain.pop()
+            return False
+        return True
+        
             
